@@ -5,4 +5,8 @@ services:
     build: ./ingesta-pets
     container_name: robot-pets
     network_mode: "host"
-    restart: "no"
+
+  ingesta-treatments:
+    build: ./ingesta-treatments
+    container_name: robot-treatments
+    network_mode: "host"
