@@ -1,0 +1,8 @@
+version: '3.8'
+
+services:
+  ingesta-pets:
+    build: ./ingesta-pets
+    container_name: robot-pets
+    network_mode: "host"
+    restart: "no"
