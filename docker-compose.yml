@@ -10,3 +10,8 @@ services:
     build: ./ingesta-treatments
     container_name: robot-treatments
     network_mode: "host"
+
+  ingesta-appointments:
+    build: ./ingesta-appointments
+    container_name: robot-appointments
+    network_mode: "host"
