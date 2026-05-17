@@ -18,7 +18,7 @@ def extraer_y_cargar():
         engine = create_engine(conn_str)
         
         # Tablas identificadas por los endpoints de la UI
-        tablas = ['citas', 'mascotas', 'veterinarios'] 
+        tablas = ['citas','veterinarios'] 
         
         s3 = boto3.client('s3')
         
