@@ -6,7 +6,7 @@ import os
 # Configuración basada en el docker-compose de tus compañeros
 MONGO_URI = "mongodb://root:password@172.31.47.67:27017/"
 DB_NAME = "mongo-treatments" # PROBAR NOMBRE
-COLLECTION_NAME = "Consulta" 
+COLLECTION_NAME = "consultas" 
 S3_BUCKET = 'vethouse-data-science'
 
 def ingesta_mongo():
