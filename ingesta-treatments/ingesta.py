@@ -3,9 +3,9 @@ from pymongo import MongoClient
 import boto3
 import os
 
-# Configuración basada en el docker-compose de tus compañeros
-MONGO_URI = "mongodb://root:password@172.31.47.67:27017/"
-DB_NAME = "mongo-treatments" # PROBAR NOMBRE
+# CONFIGURACIÓN BASADA EN TU URI
+MONGO_URI = "mongodb://root:password@172.31.17.204:27017/vethouse_clinica?authSource=admin"
+DB_NAME = "vethouse_clinica" 
 COLLECTION_NAME = "consultas" 
 S3_BUCKET = 'vethouse-data-science'
 
@@ -16,23 +16,31 @@ def ingesta_mongo():
         db = client[DB_NAME]
         col = db[COLLECTION_NAME]
         
-        print(f"--- Extrayendo documentos de MongoDB: {COLLECTION_NAME} ---")
+        print(f"--- Conectando a Mongo en 172.31.17.204 ---")
         
         # 2. Obtener datos
         datos = list(col.find())
         
         if not datos:
-            print("⚠️ No se encontraron documentos. Verificando si hay datos en la DB...")
+            print(f"⚠️ No hay datos en {DB_NAME}.{COLLECTION_NAME}")
+            # Verificamos si la colección se llama distinto
+            print(f"Colecciones disponibles: {db.list_collection_names()}")
             return
 
-        # 3. Procesar datos (Aplanamos el JSON de Mongo)
-        df = pd.DataFrame(datos)
-        if '_id' in df.columns:
-            df = df.drop(columns=['_id'])
+        # 3. PROCESAMIENTO (Aplanamiento para Athena)
+        for d in datos:
+            d.pop('_id', None) # El ID de Mongo no sirve en Athena
+            if 'tratamientos' in d and isinstance(d['tratamientos'], list):
+                # Convertimos la lista de objetos a un string legible
+                d['tratamientos'] = " | ".join([f"{t.get('tipo','?')}: {t.get('descripcion','?')}" for t in d['tratamientos']])
 
-        # 4. Guardar y Subir a S3
+        # 4. Crear DataFrame
+        df = pd.DataFrame(datos)
+
+        # 5. Guardar y Subir a S3
         csv_file = "consultas_tratamientos.csv"
-        df.to_csv(csv_file, index=False)
+        # Usamos quoting=1 (QUOTE_ALL) para que los textos con comas no rompan las columnas
+        df.to_csv(csv_file, index=False, quoting=1) 
         
         s3 = boto3.client('s3')
         s3_path = f"raw/treatments/{csv_file}"
@@ -44,7 +52,7 @@ def ingesta_mongo():
             os.remove(csv_file)
 
     except Exception as e:
-        print(f"❌ ERROR EN INGESTA TREATMENTS: {e}")
+        print(f"❌ ERROR EN INGESTA: {e}")
 
 if __name__ == "__main__":
     ingesta_mongo()
